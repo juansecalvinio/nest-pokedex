@@ -1,26 +1,77 @@
+import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
-import axios, { AxiosInstance } from 'axios';
-import { Agent } from 'https';
+import { InjectModel } from '@nestjs/mongoose';
+import { Pokemon } from 'src/pokemon/entities/pokemon.entity';
+import { PokeResponse } from './interfaces/poke-response.interface';
 
 @Injectable()
 export class SeedService {
-  private readonly axios: AxiosInstance;
+  constructor(
+    @InjectModel(Pokemon.name)
+    private readonly pokemonModel: Model<Pokemon>,
+  ) {}
 
-  constructor() {
-    this.axios = axios.create({
-      httpsAgent: new Agent({ rejectUnauthorized: false }),
+  private readonly pokeResponse: PokeResponse = {
+    count: 1302,
+    next: 'https://pokeapi.co/api/v2/pokemon?offset=10&limit=10',
+    previous: null,
+    results: [
+      {
+        name: 'bulbasaur',
+        url: 'https://pokeapi.co/api/v2/pokemon/1/',
+      },
+      {
+        name: 'ivysaur',
+        url: 'https://pokeapi.co/api/v2/pokemon/2/',
+      },
+      {
+        name: 'venusaur',
+        url: 'https://pokeapi.co/api/v2/pokemon/3/',
+      },
+      {
+        name: 'charmander',
+        url: 'https://pokeapi.co/api/v2/pokemon/4/',
+      },
+      {
+        name: 'charmeleon',
+        url: 'https://pokeapi.co/api/v2/pokemon/5/',
+      },
+      {
+        name: 'charizard',
+        url: 'https://pokeapi.co/api/v2/pokemon/6/',
+      },
+      {
+        name: 'squirtle',
+        url: 'https://pokeapi.co/api/v2/pokemon/7/',
+      },
+      {
+        name: 'wartortle',
+        url: 'https://pokeapi.co/api/v2/pokemon/8/',
+      },
+      {
+        name: 'blastoise',
+        url: 'https://pokeapi.co/api/v2/pokemon/9/',
+      },
+      {
+        name: 'caterpie',
+        url: 'https://pokeapi.co/api/v2/pokemon/10/',
+      },
+    ],
+  };
+
+  execute() {
+    const data = this.pokeResponse;
+
+    data.results.forEach(({ name, url }) => {
+      const segments = url.split('/');
+      const no: number = +segments[segments.length - 2];
+
+      this.pokemonModel.create({
+        name,
+        no,
+      });
     });
-  }
 
-  async execute() {
-    try {
-      const { data } = await this.axios.get(
-        'https://pokeapi.co/api/v2/pokemon?limit=400',
-      );
-      return data;
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      throw error;
-    }
+    return 'Seed executed';
   }
 }
